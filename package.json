@@ -4,6 +4,8 @@
   "description": "DesignSight - AI-Powered Design Feedback Platform",
   "scripts": {
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "start": "npm run start:all",
+    "start:all": "npm run install-all && concurrently \"npm run backend\" \"npm run frontend\"",
     "backend": "cd backend && npm run dev",
     "frontend": "cd frontend && npm start",
     "install-all": "npm run install-backend && npm run install-frontend",
