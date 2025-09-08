@@ -1,190 +1,269 @@
-# DesignSight - AI-Powered Design Feedback Platform
+# 🎨 DesignSight - AI-Powered Design Feedback Platform
 
-🎨 **DesignSight** is a MERN stack application that uses Google Gemini 2.0 Flash AI to analyze design screenshots and provide coordinate-anchored feedback with role-based filtering and collaborative discussions.
+<div align="center">
 
-## 🚀 Quick Start
+![DesignSight Logo](https://img.shields.io/badge/DesignSight-AI%20Feedback-blue?style=for-the-badge&logo=palette)
 
-### Prerequisites
-- Docker Desktop installed
-- Google Gemini API key
-- Node.js 18+ (for local development)
+**Intelligent design analysis powered by Google Gemini AI**
 
-### Setup Instructions
+[![React](https://img.shields.io/badge/React-18.0-61DAFB?style=flat&logo=react)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=flat&logo=node.js)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat&logo=mongodb)](https://mongodb.com/)
+[![Gemini AI](https://img.shields.io/badge/Google-Gemini%202.0-4285F4?style=flat&logo=google)](https://ai.google.dev/)
 
-1. **Clone and navigate to project**
-   ```bash
-   cd designsight
-   ```
+[🚀 Live Demo](https://designsight.tejjj02.repl.co) • [📖 Documentation](./PROJECT_OVERVIEW.md) • [🏗️ Architecture](./ARCHITECTURE.md) • [🐛 Issues](https://github.com/tejjj02/DesignSight/issues)
 
-2. **Configure environment**
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` and add your `GEMINI_API_KEY`
-
-3. **Start with Docker Compose**
-   ```bash
-   docker-compose up --build
-   ```
-
-4. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-   - MongoDB: localhost:27017
-
-## 📁 Project Structure
-
-```
-designsight/
-├── backend/                 # Node.js Express API
-│   ├── models/             # MongoDB schemas
-│   ├── routes/             # API endpoints
-│   ├── controllers/        # Business logic
-│   ├── middleware/         # Auth, validation, etc.
-│   ├── utils/              # Helper functions
-│   └── uploads/            # Uploaded images
-├── frontend/               # React application
-│   ├── src/
-│   │   ├── components/     # Reusable components
-│   │   ├── pages/          # Route components
-│   │   ├── hooks/          # Custom React hooks
-│   │   └── utils/          # Helper functions
-│   └── public/             # Static assets
-└── docker-compose.yml      # Container orchestration
-```
-
-## 🛠️ Technology Stack
-
-**Backend:**
-- Node.js + Express.js
-- MongoDB with Mongoose
-- Google Gemini 2.0 Flash API
-- Multer for file uploads
-- JWT for authentication
-
-**Frontend:**
-- React 18 with Hooks
-- React Router for navigation
-- Tailwind CSS for styling
-- Axios for API calls
-- Heroicons for icons
-
-**Infrastructure:**
-- Docker Compose for containerization
-- MongoDB for data persistence
-- CORS enabled for cross-origin requests
-
-## 🎯 Core Features
-
-### Stage 1: Foundation ✅
-- [x] MERN stack project structure
-- [x] Docker containerization
-- [x] MongoDB database setup
-- [x] Basic API framework
-- [x] React frontend scaffold
-
-### Stage 2: Data Models & API (Next)
-- [ ] MongoDB schemas (Project, Image, Feedback, Comment)
-- [ ] REST API endpoints
-- [ ] File upload handling
-- [ ] Database relationships
-
-### Stage 3: AI Integration (Next)
-- [ ] Gemini 2.0 Flash integration
-- [ ] Structured feedback generation
-- [ ] Coordinate mapping system
-- [ ] Error handling & retries
-
-### Stage 4: Interactive Frontend (Next)
-- [ ] Image display with overlays
-- [ ] Coordinate-anchored feedback
-- [ ] Role-based filtering
-- [ ] Collaborative commenting
-
-## 🔧 Development Commands
-
-**With Docker (Recommended):**
-```bash
-# Start all services
-docker-compose up
-
-# Rebuild and start
-docker-compose up --build
-
-# Stop all services
-docker-compose down
-
-# View logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-```
-
-**Local Development:**
-```bash
-# Backend
-cd backend
-npm install
-npm run dev
-
-# Frontend (new terminal)
-cd frontend
-npm install
-npm start
-```
-
-## 📊 API Endpoints (Planned)
-
-```
-POST   /api/projects              # Create project
-GET    /api/projects              # List projects
-POST   /api/projects/:id/upload   # Upload image
-GET    /api/images/:id/analysis   # Get AI analysis
-POST   /api/feedback/:id/comment  # Add comment
-GET    /api/feedback/role/:role   # Filter by role
-```
-
-## 🎨 Design System
-
-**Feedback Categories:**
-- 🔴 **Accessibility** (Color contrast, readability)
-- 🟡 **Visual Hierarchy** (Spacing, alignment)
-- 🔵 **Content** (Copy clarity, messaging)
-- 🟢 **UX Patterns** (User flow, best practices)
-
-**User Roles:**
-- **Designer** - Visual design feedback
-- **Developer** - Implementation feasibility
-- **PM** - Business requirements alignment
-- **Reviewer** - General quality assurance
-
-## 🚦 Current Status
-
-**✅ Stage 1 Complete** - Project structure and Docker setup ready
-- Full MERN stack foundation
-- Docker containerization working
-- Database initialization
-- Environment configuration
-- Ready for Stage 2 development
-
-## 📝 Next Steps
-
-1. **Stage 2**: Implement data models and API endpoints
-2. **Stage 3**: Integrate Gemini 2.0 Flash for AI analysis
-3. **Stage 4**: Build interactive frontend with feedback overlays
-4. **Demo**: Create sample data and demo video
-
-## 🤝 Contributing
-
-This is a 72-hour MVP prototype. Focus areas:
-- Keep it simple and functional
-- Prioritize core features over polish
-- Document as you build
-- Test with real images
-
-## 📄 License
-
-MIT License - Feel free to use for your own projects!
+</div>
 
 ---
 
-**Ready to analyze designs with AI! 🎨✨**
+## ✨ **What is DesignSight?**
+
+DesignSight transforms the design review process through **AI-powered analysis**, providing instant, professional feedback on UI/UX designs. Upload your designs and receive intelligent insights from multiple perspectives - whether you're a designer seeking aesthetic guidance, a developer checking implementation feasibility, or a UX researcher analyzing user experience.
+
+### 🎯 **Key Highlights**
+
+- **🤖 AI-Powered Analysis**: Google Gemini 2.0 Flash integration for intelligent design feedback
+- **🎭 Multi-Role Perspectives**: Designer, Developer, UX Researcher, and Product Manager viewpoints
+- **📍 Coordinate-Based Feedback**: Precise visual feedback with clickable coordinates
+- **💬 Collaborative Comments**: Team discussion and feedback iteration
+- **📊 Professional Reports**: Export insights in PDF and JSON formats
+- **🎨 Modern UI**: ChatGPT-inspired interface with smooth animations
+
+---
+
+## 🚀 **Quick Start**
+
+### **🌐 Try It Online (Replit)**
+The fastest way to experience DesignSight:
+
+```
+👉 Visit: https://designsight.tejjj02.repl.co
+```
+
+### **💻 Local Development**
+
+**Prerequisites:**
+- Node.js 18+ 
+- MongoDB (Atlas or local)
+- Google Gemini API key ([Get it here](https://ai.google.dev/))
+
+**1-Minute Setup:**
+```bash
+# Clone and setup
+git clone https://github.com/tejjj02/DesignSight.git
+cd DesignSight
+
+# Backend setup
+cd backend && npm install
+cp .env.example .env  # Add your API keys
+
+# Frontend setup  
+cd ../frontend && npm install
+
+# Launch (2 terminals)
+cd backend && npm start     # Port 5000
+cd frontend && npm start    # Port 3000
+```
+
+**Access:** `http://localhost:3000`
+
+---
+
+## �️ **Tech Stack**
+
+<details>
+<summary><strong>📋 Complete Technology Overview</strong></summary>
+
+### **Frontend Stack**
+- **React 18**: Modern hooks, concurrent features
+- **CSS3**: Custom properties, animations, responsive design
+- **Axios**: HTTP client with interceptors
+- **JavaScript ES6+**: Modern syntax and features
+
+### **Backend Stack**
+- **Node.js 18+**: Runtime environment
+- **Express.js**: Web framework with middleware
+- **Multer**: File upload handling
+- **Mongoose**: MongoDB object modeling
+
+### **Database & AI**
+- **MongoDB Atlas**: Cloud database with indexing
+- **Google Gemini 2.0 Flash**: Advanced AI vision model
+- **File System**: Local image storage with optimization
+
+### **DevOps & Deployment**
+- **Docker**: Containerization support
+- **Replit**: Cloud deployment platform
+- **GitHub Actions**: CI/CD pipeline ready
+- **Environment Variables**: Secure configuration management
+
+</details>
+
+---
+
+## 🎯 **Core Features**
+
+### **🖼️ Intelligent Design Analysis**
+- Upload designs in multiple formats (PNG, JPG, JPEG)
+- AI-powered feedback generation with contextual insights
+- Role-specific analysis perspectives for targeted feedback
+
+### **📍 Interactive Feedback System**
+- Visual feedback overlays with precise coordinates
+- Clickable feedback points for detailed exploration
+- Severity indicators and category-based organization
+
+### **👥 Collaborative Workflow**
+- Multi-user commenting system
+- Project-based organization and management
+- Real-time feedback iteration and discussion
+
+### **📊 Professional Reporting**
+- Export comprehensive feedback reports
+- PDF generation with visual annotations
+- JSON exports for integration with other tools
+
+---
+
+## 🔄 **How It Works**
+
+```mermaid
+graph LR
+    A[Upload Design] --> B[Select Analysis Role]
+    B --> C[AI Processing]
+    C --> D[Coordinate-Based Feedback]
+    D --> E[Team Collaboration]
+    E --> F[Export Reports]
+    
+    style A fill:#e1f5fe
+    style C fill:#f3e5f5
+    style D fill:#e8f5e8
+    style F fill:#fff3e0
+```
+
+### **📋 Detailed Workflow**
+
+1. **Project Creation**: Organize designs by project for better management
+2. **Image Upload**: Drag-and-drop interface with progress tracking
+3. **Role Selection**: Choose perspective (Designer/Developer/UX/PM)
+4. **AI Analysis**: Gemini AI processes design with contextual understanding
+5. **Visual Feedback**: Interactive overlays show feedback with coordinates
+6. **Collaboration**: Team members add comments and iterate on feedback
+7. **Export**: Generate professional reports for stakeholders
+
+---
+
+## 📚 **Documentation**
+
+| Document | Description |
+|----------|-------------|
+| [📖 Project Overview](./PROJECT_OVERVIEW.md) | Comprehensive technical documentation |
+| [🏗️ Architecture Guide](./ARCHITECTURE.md) | System design and component structure |
+| [🚀 Deployment Guide](./REPLIT_DEPLOYMENT.md) | Production deployment instructions |
+| [🔧 API Reference](./PROJECT_OVERVIEW.md#api-endpoints) | Complete API documentation |
+
+---
+
+## 🎨 **Design Philosophy**
+
+DesignSight embraces a **ChatGPT-inspired aesthetic** with:
+- Clean, minimal interface design
+- Smooth animations and micro-interactions
+- Consistent color system with CSS custom properties
+- Responsive design for all device sizes
+- Accessibility-first approach
+
+---
+
+## 🚦 **API Reference**
+
+<details>
+<summary><strong>🔗 Core Endpoints</strong></summary>
+
+### **Projects**
+```http
+POST   /api/projects           # Create new project
+GET    /api/projects           # List all projects  
+GET    /api/projects/:id       # Get project details
+PUT    /api/projects/:id       # Update project
+DELETE /api/projects/:id       # Delete project
+```
+
+### **Images**
+```http
+POST   /api/images/upload      # Upload design image
+GET    /api/images/:id         # Get image details
+POST   /api/images/:id/analyze # Trigger AI analysis
+DELETE /api/images/:id         # Delete image
+```
+
+### **Feedback**
+```http
+GET    /api/feedback/:imageId  # Get image feedback
+POST   /api/feedback           # Add manual feedback
+PUT    /api/feedback/:id       # Update feedback
+DELETE /api/feedback/:id       # Delete feedback
+```
+
+### **Comments**
+```http
+POST   /api/comments          # Add comment
+GET    /api/comments/:feedbackId # Get comments
+PUT    /api/comments/:id      # Update comment
+DELETE /api/comments/:id      # Delete comment
+```
+
+</details>
+
+---
+
+## 🤝 **Contributing**
+
+We welcome contributions! Here's how to get started:
+
+### **🔧 Development Setup**
+```bash
+# Fork the repository on GitHub
+git clone https://github.com/YOUR_USERNAME/DesignSight.git
+cd DesignSight
+
+# Create feature branch
+git checkout -b feature/amazing-feature
+
+# Make your changes and commit
+git commit -m "Add amazing feature"
+
+# Push and create Pull Request
+git push origin feature/amazing-feature
+```
+
+### **📝 Contribution Guidelines**
+- Follow existing code style and conventions
+- Add tests for new features
+- Update documentation as needed
+- Ensure all tests pass before submitting
+
+---
+
+## � **Support & Community**
+
+- **🐛 Bug Reports**: [GitHub Issues](https://github.com/tejjj02/DesignSight/issues)
+- **💡 Feature Requests**: [GitHub Discussions](https://github.com/tejjj02/DesignSight/discussions)
+- **📧 Contact**: [Create an issue](https://github.com/tejjj02/DesignSight/issues/new) for questions
+
+---
+
+## 📄 **License**
+
+This project is licensed under the **MIT License** - see the [LICENSE](./LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**🌟 Star this repository if you find it helpful!**
+
+Made with ❤️ by the DesignSight team
+
+</div>
