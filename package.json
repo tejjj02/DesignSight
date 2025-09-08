@@ -1,0 +1,29 @@
+{
+  "name": "designsight",
+  "version": "1.0.0",
+  "description": "DesignSight - AI-Powered Design Feedback Platform",
+  "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm start",
+    "install-all": "npm run install-backend && npm run install-frontend",
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "design",
+    "feedback",
+    "ai",
+    "gemini",
+    "mern"
+  ],
+  "author": "",
+  "license": "MIT"
+}

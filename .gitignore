@@ -1,0 +1,97 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Environment variables (NEVER COMMIT THESE!)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.test.local
+.env.development.local
+.env.production.local
+backend/.env
+frontend/.env
+
+# Production builds
+build/
+dist/
+out/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary folders
+tmp/
+temp/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Uploads and user-generated content
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.svg
+*.pdf
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Testing
+coverage/
+.nyc_output
+
+# Misc
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist
