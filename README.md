@@ -32,14 +32,7 @@ DesignSight transforms the design review process through **AI-powered analysis**
 
 ---
 
-## 🚀 **Quick Start**
 
-### **🌐 Try It Online (Replit)**
-The fastest way to experience DesignSight:
-
-```
-👉 Visit: https://designsight.tejjj02.repl.co
-```
 
 ### **💻 Local Development**
 
