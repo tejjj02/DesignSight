@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI } = require('@google/generative-ai'); // Latest version loaded
 const fs = require('fs');
 const path = require('path');
 
@@ -9,7 +9,8 @@ class GeminiService {
     }
     
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // Use environment variable if provided, otherwise default to gemini-3.5-flash
+    this.model = this.genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-3.5-flash' });
   }
 
   /**

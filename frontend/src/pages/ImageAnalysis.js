@@ -2,686 +2,512 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { imageAPI } from '../utils/api';
 
+function Icon({ d, size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d={d} />
+    </svg>
+  );
+}
+
+const ICONS = {
+  back:     'M19 12H5M12 5l-7 7 7 7',
+  spark:    'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
+  plus:     'M12 5v14M5 12h14',
+  close:    'M18 6 6 18M6 6l12 12',
+  download: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',
+  comment:  'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
+  check:    'M20 6L9 17l-5-5',
+};
+
+// ── Severity badge ─────────────────────────────────────────────────────────────
+function SeverityBadge({ severity }) {
+  const cfg = {
+    high:   { color: '#f87171', bg: 'rgba(248,113,113,0.15)' },
+    medium: { color: '#fbbf24', bg: 'rgba(251,191,36,0.15)'  },
+    low:    { color: '#38bdf8', bg: 'rgba(56,189,248,0.15)'  },
+  };
+  const c = cfg[severity] || cfg.low;
+  return (
+    <span className="text-xs font-body px-2 py-0.5 rounded-full capitalize"
+          style={{ color: c.color, background: c.bg }}>
+      {severity}
+    </span>
+  );
+}
+
+// ── Score ring ─────────────────────────────────────────────────────────────────
+function ScoreRing({ score }) {
+  const radius = 36;
+  const circ   = 2 * Math.PI * radius;
+  const dash   = circ * (score / 100);
+
+  return (
+    <div className="relative w-24 h-24 flex items-center justify-center">
+      <svg className="absolute" width="96" height="96" viewBox="0 0 96 96">
+        <circle cx="48" cy="48" r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
+        <circle
+          cx="48" cy="48" r={radius} fill="none"
+          stroke="url(#scoreGrad)" strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={`${dash} ${circ}`}
+          transform="rotate(-90 48 48)"
+        />
+        <defs>
+          <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#10a37f" />
+            <stop offset="100%" stopColor="#38bdf8" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <span className="relative font-heading italic text-white text-2xl">{score}</span>
+    </div>
+  );
+}
+
+// ── Feedback item ──────────────────────────────────────────────────────────────
+function FeedbackItem({ item, index, comments, onAddComment, selected, onSelect }) {
+  const [newCmt, setNewCmt] = useState('');
+
+  const submitComment = async () => {
+    if (!newCmt.trim()) return;
+    await onAddComment(item._id, newCmt);
+    setNewCmt('');
+  };
+
+  return (
+    <div
+      className="glass-card p-4 cursor-pointer transition-all duration-200"
+      style={{
+        borderColor: selected ? 'rgba(16,163,127,0.4)' : undefined,
+        background: selected ? 'rgba(16,163,127,0.06)' : undefined,
+      }}
+      onClick={() => onSelect(selected ? null : item._id)}
+    >
+      {/* Header */}
+      <div className="flex items-start gap-3 mb-2">
+        <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-black"
+             style={{ background: item.severity === 'high' ? '#f87171' : item.severity === 'medium' ? '#fbbf24' : '#38bdf8' }}>
+          {index + 1}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-body text-white/90 leading-tight line-clamp-2">{item.title}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 mb-2 pl-9">
+        <SeverityBadge severity={item.severity} />
+        <span className="text-xs font-body px-2 py-0.5 rounded-full text-white/40"
+              style={{ background: 'rgba(255,255,255,0.06)' }}>
+          {item.category?.replace('_', ' ')}
+        </span>
+      </div>
+
+      {/* Expanded details */}
+      {selected && (
+        <div className="pl-9 mt-3 space-y-3 border-t border-white/10 pt-3">
+          <p className="text-xs font-body text-white/60 leading-relaxed">{item.description}</p>
+
+          {item.recommendations?.length > 0 && (
+            <div>
+              <p className="text-xs font-body text-white/35 uppercase tracking-widest mb-1.5">Recommendations</p>
+              <ul className="space-y-1">
+                {item.recommendations.map((r, i) => (
+                  <li key={i} className="text-xs font-body text-white/60 flex items-start gap-1.5">
+                    <span className="text-[#10a37f] mt-0.5 flex-shrink-0"><Icon d={ICONS.check} size={10} /></span>
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Comments */}
+          <div>
+            <p className="text-xs font-body text-white/35 uppercase tracking-widest mb-1.5">
+              Comments ({comments?.length || 0})
+            </p>
+            {comments?.length > 0 && (
+              <div className="space-y-2 mb-2 max-h-28 overflow-y-auto">
+                {comments.map((c, i) => (
+                  <div key={i} className="text-xs font-body p-2 rounded-lg"
+                       style={{ background: 'rgba(255,255,255,0.05)' }}>
+                    <span className="text-white/50 font-medium">{c.author}: </span>
+                    <span className="text-white/70">{c.content}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                value={newCmt}
+                onChange={e => setNewCmt(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && submitComment()}
+                placeholder="Add comment…"
+                className="glass-input flex-1 px-3 py-1.5 text-xs font-body"
+                onClick={e => e.stopPropagation()}
+              />
+              <button onClick={(e) => { e.stopPropagation(); submitComment(); }}
+                      className="glass-btn-accent px-3 py-1.5 text-xs"
+                      style={{ borderRadius: '8px' }}>
+                Post
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── ImageAnalysis page ─────────────────────────────────────────────────────────
 const ImageAnalysis = () => {
   const { imageId } = useParams();
-  const navigate = useNavigate();
-  const imageRef = useRef(null);
-  const [analysis, setAnalysis] = useState(null);
-  const [image, setImage] = useState(null);
-  const [feedback, setFeedback] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [error, setError] = useState(null);
+  const navigate    = useNavigate();
+
+  const [image,      setImage]      = useState(null);
+  const [analysis,   setAnalysis]   = useState(null);
+  const [feedback,   setFeedback]   = useState([]);
+  const [comments,   setComments]   = useState({});
+  const [loading,    setLoading]    = useState(true);
+  const [analyzing,  setAnalyzing]  = useState(false);
+  const [error,      setError]      = useState(null);
   const [roleFilter, setRoleFilter] = useState('all');
-  const [userRole, setUserRole] = useState('designer'); // Current user role
-  const [showAddFeedback, setShowAddFeedback] = useState(false);
-  const [newFeedback, setNewFeedback] = useState({
-    title: '',
-    description: '',
-    category: 'visual_hierarchy',
-    severity: 'medium',
-    coordinates: { x: 0, y: 0, width: 50, height: 50 }
+  const [userRole,   setUserRole]   = useState('designer');
+  const [selected,   setSelected]   = useState(null);
+  const [showAdd,    setShowAdd]    = useState(false);
+  const [newFb,      setNewFb]      = useState({
+    title: '', description: '', category: 'visual_hierarchy', severity: 'medium',
+    coordinates: { x: 0, y: 0, width: 50, height: 50 },
   });
-  const [comments, setComments] = useState({});
-  const [newComment, setNewComment] = useState('');
-  const [selectedFeedbackForComment, setSelectedFeedbackForComment] = useState(null);
 
-  useEffect(() => {
-    console.log('ImageAnalysis component mounted with imageId:', imageId);
-    fetchAnalysis();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageId]);
+  useEffect(() => { fetchAll(); }, [imageId]); // eslint-disable-line
 
-  const fetchAnalysis = async () => {
+  const fetchAll = async () => {
     try {
       setLoading(true);
-      console.log('Fetching analysis for imageId:', imageId);
       const data = await imageAPI.getAnalysis(imageId);
-      console.log('Analysis API response:', data);
-      
       setImage(data.image);
-      setFeedback(data.feedback);
-      
-      console.log('Image data set:', data.image);
-      console.log('Feedback data set:', data.feedback);
-      
-      if (data.image.analysisData) {
-        setAnalysis(data.image.analysisData);
-        console.log('Analysis data set:', data.image.analysisData);
-      }
+      setFeedback(data.feedback || []);
+      if (data.image.analysisData) setAnalysis(data.image.analysisData);
 
-      // Fetch comments for each feedback
-      const feedbackComments = {};
-      for (const feedbackItem of data.feedback) {
+      const cmtMap = {};
+      for (const fb of data.feedback || []) {
         try {
-          const commentsData = await imageAPI.getFeedbackComments(feedbackItem._id);
-          feedbackComments[feedbackItem._id] = commentsData.comments || [];
-        } catch (error) {
-          console.error('Error fetching comments for feedback:', feedbackItem._id, error);
-          feedbackComments[feedbackItem._id] = [];
-        }
+          const r = await imageAPI.getFeedbackComments(fb._id);
+          cmtMap[fb._id] = r.comments || [];
+        } catch { cmtMap[fb._id] = []; }
       }
-      setComments(feedbackComments);
-    } catch (error) {
-      setError('Failed to load analysis data');
-      console.error('Error fetching analysis:', error);
-    } finally {
-      setLoading(false);
-    }
+      setComments(cmtMap);
+    } catch { setError('Failed to load analysis'); }
+    finally { setLoading(false); }
   };
 
   const startAnalysis = async () => {
+    setAnalyzing(true);
+    setError(null);
     try {
-      setAnalyzing(true);
-      setError(null);
-      
-      const result = await imageAPI.analyzeImage(imageId, {
-        role: userRole,
-        focusAreas: ['layout', 'typography', 'color'],
-        projectType: 'web-design'
+      const res = await imageAPI.analyzeImage(imageId, {
+        role: userRole, focusAreas: ['layout', 'typography', 'color'], projectType: 'web-design',
       });
+      if (res.success) await fetchAll();
+      else setError('Analysis failed: ' + res.error);
+    } catch (e) { setError('Failed: ' + e.message); }
+    finally { setAnalyzing(false); }
+  };
 
-      if (result.success) {
-        // Refresh the analysis data
-        await fetchAnalysis();
-      } else {
-        setError('Analysis failed: ' + result.error);
-      }
-    } catch (error) {
-      setError('Failed to start analysis: ' + error.message);
-      console.error('Analysis error:', error);
-    } finally {
-      setAnalyzing(false);
+  const addFeedback = async () => {
+    const res = await imageAPI.addFeedback({ ...newFb, imageId, targetRoles: [userRole] });
+    if (res.success) {
+      setShowAdd(false);
+      setNewFb({ title: '', description: '', category: 'visual_hierarchy', severity: 'medium',
+        coordinates: { x: 0, y: 0, width: 50, height: 50 } });
+      await fetchAll();
     }
   };
 
-  const addUserFeedback = async () => {
-    try {
-      const feedbackData = {
-        ...newFeedback,
-        imageId,
-        targetRoles: [userRole]
-      };
-      
-      const result = await imageAPI.addFeedback(feedbackData);
-      if (result.success) {
-        setShowAddFeedback(false);
-        setNewFeedback({
-          title: '',
-          description: '',
-          category: 'visual_hierarchy',
-          severity: 'medium',
-          coordinates: { x: 0, y: 0, width: 50, height: 50 }
-        });
-        await fetchAnalysis(); // Refresh feedback
-      }
-    } catch (error) {
-      console.error('Error adding feedback:', error);
-      setError('Failed to add feedback');
-    }
+  const addComment = async (fbId, content) => {
+    await imageAPI.addComment({ feedbackId: fbId, content, author: userRole });
+    await fetchAll();
   };
 
-  const addComment = async (feedbackId) => {
-    if (!newComment.trim()) return;
-    
-    try {
-      const result = await imageAPI.addComment({
-        feedbackId,
-        content: newComment,
-        author: userRole
-      });
-      
-      if (result.success) {
-        setNewComment('');
-        setSelectedFeedbackForComment(null);
-        await fetchAnalysis(); // Refresh comments
-      }
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      setError('Failed to add comment');
-    }
+  const downloadJSON = () => {
+    const data = { image, analysis, feedback: filteredFeedback, exportDate: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `feedback-${image?.originalName || 'analysis'}.json`;
+    a.click();
   };
 
-  const downloadFeedback = async (format) => {
-    try {
-      const feedbackData = {
-        image: image,
-        analysis: analysis,
-        feedback: filteredFeedback,
-        userRole: userRole,
-        exportDate: new Date().toISOString()
-      };
-
-      if (format === 'json') {
-        const dataStr = JSON.stringify(feedbackData, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `feedback-${image?.originalName || 'analysis'}.json`;
-        link.click();
-        URL.revokeObjectURL(url);
-      } else if (format === 'pdf') {
-        // Call backend API for PDF generation
-        const response = await imageAPI.downloadFeedbackPDF(imageId, { 
-          roleFilter,
-          userRole 
-        });
-        
-        // Create download link for PDF
-        const blob = new Blob([response], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `feedback-${image?.originalName || 'analysis'}.pdf`;
-        link.click();
-        URL.revokeObjectURL(url);
-      }
-    } catch (error) {
-      console.error('Error downloading feedback:', error);
-      setError('Failed to download feedback');
-    }
+  const downloadPDF = async () => {
+    const blob = await imageAPI.downloadFeedbackPDF(imageId);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+    a.download = `feedback-${image?.originalName || 'analysis'}.pdf`;
+    a.click();
   };
 
-  const getSeverityColor = (severity) => {
-    const colors = {
-      high: 'border-red-500 bg-red-500',
-      medium: 'border-yellow-500 bg-yellow-500',
-      low: 'border-blue-500 bg-blue-500'
-    };
-    return colors[severity] || colors.medium;
-  };
+  const filteredFeedback = feedback.filter(fb =>
+    roleFilter === 'all' || (fb.targetRoles && fb.targetRoles.includes(roleFilter))
+  );
 
-  const filteredFeedback = feedback.filter(item => {
-    if (roleFilter === 'all') return true;
-    return item.targetRoles && item.targetRoles.includes(roleFilter);
-  });
-
+  // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="h-96 bg-gray-200 rounded"></div>
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="glass-card h-10 w-56 mb-6 animate-pulse" />
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
+          <div className="xl:col-span-3 glass-card h-[70vh] animate-pulse" />
+          <div className="glass-card h-[70vh] animate-pulse" />
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && !image) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h3 className="text-red-800 font-medium">Error</h3>
-          <p className="text-red-600">{error}</p>
-          <button
-            onClick={() => navigate(-1)}
-            className="mt-4 text-blue-600 hover:text-blue-700"
-          >
-            ← Go Back
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="glass-panel p-8 text-center">
+          <p className="text-white/60 font-body mb-4">{error}</p>
+          <button onClick={() => navigate(-1)} className="btn-primary px-6 py-2.5 text-sm">
+            Go Back
           </button>
         </div>
       </div>
     );
   }
 
+  const statusColor = {
+    completed:  '#10a37f',
+    processing: '#fbbf24',
+    failed:     '#f87171',
+    pending:    'rgba(255,255,255,0.4)',
+  }[image?.analysisStatus] || 'rgba(255,255,255,0.4)';
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen" style={{backgroundColor: 'var(--primary-bg)'}}>
-      {/* Improved Header Layout */}
-      <div className="shadow-sm border-b" style={{backgroundColor: 'var(--secondary-bg)', borderColor: 'var(--border-color)'}}>
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          {/* Top Row - Title and Back Button */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-4 min-w-0 flex-1">
-              <button
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-1 text-sm hover:opacity-75 transition-opacity text-accent flex-shrink-0"
-              >
-                ← Back to Project
-              </button>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg font-semibold truncate" style={{color: 'var(--text-primary)'}}>
-                  {image?.originalName || 'Image Analysis'}
-                </h1>
-                <p className="text-xs truncate" style={{color: 'var(--text-muted)'}}>
-                  Status: <span className={`font-medium ${
-                    image?.analysisStatus === 'completed' ? 'text-green-600' :
-                    image?.analysisStatus === 'processing' ? 'text-yellow-600' :
-                    image?.analysisStatus === 'failed' ? 'text-red-600' :
-                    'text-gray-600'
-                  }`}>
-                    {image?.analysisStatus || 'Not analyzed'}
-                  </span>
-                </p>
-              </div>
-            </div>
-            
-            {/* Primary Action Buttons */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={() => setShowAddFeedback(true)}
-                className="px-3 py-1 text-white rounded text-xs transition-all hover:transform hover:translateY(-1px)"
-                style={{backgroundColor: 'var(--success-color)'}}
-              >
-                Add Feedback
-              </button>
-
-              {(!image?.analysisStatus || image?.analysisStatus === 'pending' || image?.analysisStatus === 'failed') && (
-                <button
-                  onClick={startAnalysis}
-                  disabled={analyzing}
-                  className="btn-primary px-3 py-1 text-xs disabled:opacity-50"
-                >
-                  {analyzing ? 'Analyzing...' : 'Analyze'}
-                </button>
-              )}
-            </div>
+    <div className="max-w-7xl mx-auto px-6">
+      {/* Page header */}
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <button onClick={() => navigate(-1)}
+                  className="flex items-center gap-1.5 text-xs font-body text-white/40 hover:text-white/70
+                             transition-colors mb-2">
+            <Icon d={ICONS.back} size={12} />
+            Back to Project
+          </button>
+          <h1 className="font-heading italic text-white text-2xl leading-none">
+            {image?.originalName || 'Image Analysis'}
+          </h1>
+          <div className="flex items-center gap-2 mt-1.5">
+            <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: statusColor }} />
+            <span className="text-xs font-body capitalize" style={{ color: statusColor }}>
+              {image?.analysisStatus || 'not analyzed'}
+            </span>
           </div>
+        </div>
 
-          {/* Bottom Row - Controls and Filters */}
-          <div className="flex items-center justify-between gap-4 pt-2 border-t" style={{borderColor: 'var(--border-color)'}}>
-            <div className="flex items-center gap-3 text-sm">
-              {/* User Role Selector */}
-              <div className="flex items-center gap-1">
-                <label className="text-xs" style={{color: 'var(--text-muted)'}}>Role:</label>
-                <select
-                  value={userRole}
-                  onChange={(e) => setUserRole(e.target.value)}
-                  className="border rounded px-4 py-2 text-xs align-left"
-                  style={{borderColor: 'var(--border-color)', backgroundColor: 'var(--secondary-bg)'}}
-                >
-                  <option value="designer">Designer</option>
-                  <option value="developer">Developer</option>
-                  <option value="pm">PM</option>
-                  <option value="reviewer">Reviewer</option>
-                </select>
-              </div>
+        {/* Action bar */}
+        <div className="flex items-center gap-2 flex-wrap justify-end mt-1">
+          {/* Role selector */}
+          <select value={userRole} onChange={e => setUserRole(e.target.value)}
+                  className="glass-input text-xs font-body px-3 py-2 pr-6 appearance-none cursor-pointer">
+            {['designer', 'developer', 'pm', 'reviewer'].map(r => (
+              <option key={r} value={r} style={{ background: '#111' }}>{r}</option>
+            ))}
+          </select>
 
-              {/* Role Filter */}
-              <div className="flex items-center gap-1 justify-start">
-                <label className="text-xs text-left" style={{color: 'var(--text-muted)'}}>Filter:</label>
-                <select
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
-                  className="border rounded px-4 py-2 text-xs text-left "
-                  style={{borderColor: 'var(--border-color)', backgroundColor: 'var(--secondary-bg)'}}
-                >
-                  <option value="all">All</option>
-                  <option value="designer">Designer</option>
-                  <option value="developer">Developer</option>
-                  <option value="pm">PM</option>
-                  <option value="reviewer">Reviewer</option>
-                </select>
-              </div>
-            </div>
+          {/* Filter */}
+          <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
+                  className="glass-input text-xs font-body px-3 py-2 pr-6 appearance-none cursor-pointer">
+            {['all', 'designer', 'developer', 'pm', 'reviewer'].map(r => (
+              <option key={r} value={r} style={{ background: '#111' }}>{r === 'all' ? 'All roles' : r}</option>
+            ))}
+          </select>
 
-            {/* Download Options */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs" style={{color: 'var(--text-muted)'}}>Export:</span>
-              <button
-                onClick={() => downloadFeedback('json')}
-                className="btn-secondary px-2 py-1 text-xs"
-              >
-                JSON
-              </button>
-              <button
-                onClick={() => downloadFeedback('pdf')}
-                className="btn-secondary px-2 py-1 text-xs"
-              >
-                PDF
-              </button>
-            </div>
-          </div>
+          <button onClick={() => setShowAdd(true)}
+                  className="glass-btn px-4 py-2 text-xs flex items-center gap-1.5"
+                  style={{ borderRadius: '9999px' }}>
+            <Icon d={ICONS.plus} size={12} />
+            Add Feedback
+          </button>
+
+          {['pending', 'failed', undefined].includes(image?.analysisStatus) && (
+            <button onClick={startAnalysis} disabled={analyzing}
+                    className="btn-primary px-4 py-2 text-xs flex items-center gap-1.5 disabled:opacity-40">
+              <Icon d={ICONS.spark} size={12} />
+              {analyzing ? 'Analyzing…' : 'Analyze with AI'}
+            </button>
+          )}
+
+          <button onClick={downloadJSON}
+                  className="glass-btn px-3 py-2 text-xs flex items-center gap-1"
+                  style={{ borderRadius: '9999px' }}>
+            <Icon d={ICONS.download} size={12} />
+            JSON
+          </button>
+          <button onClick={downloadPDF}
+                  className="glass-btn px-3 py-2 text-xs flex items-center gap-1"
+                  style={{ borderRadius: '9999px' }}>
+            <Icon d={ICONS.download} size={12} />
+            PDF
+          </button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto p-4">
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 h-[calc(100vh-120px)]">
-          {/* Image Display - Takes more space */}
-          <div className="xl:col-span-3">
-            <div className="rounded-lg shadow-accent h-full flex flex-col card-hover" style={{backgroundColor: 'var(--secondary-bg)'}}>
-              {/* Image Header */}
-              {image && (
-                <div className="px-4 py-2 border-b rounded-t-lg" style={{backgroundColor: 'var(--accent-light)', borderColor: 'var(--border-color)'}}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium truncate" style={{color: 'var(--text-primary)'}}>
-                        {image.originalName}
-                      </h3>
-                      <p className="text-xs" style={{color: 'var(--text-muted)'}}>
-                        {image.metadata?.width}×{image.metadata?.height}px
-                      </p>
-                    </div>
-                    <div className="text-xs" style={{color: 'var(--text-muted)'}}>
-                      ID: {image._id?.slice(-8)}
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Image Container */}
-              <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-                {image ? (
-                  <div className="relative max-w-full max-h-full">
-                    <img
-                      ref={imageRef}
-                      src={imageAPI.getImageFileUrl(image._id)}
-                      alt={image.originalName}
-                      className="max-w-full max-h-full object-contain rounded"
-                      style={{ maxHeight: 'calc(100vh - 200px)' }}
-                      onLoad={() => console.log('Image loaded successfully')}
-                      onError={(e) => {
-                        console.error('Image failed to load:', e);
-                        console.error('Image URL:', imageAPI.getImageFileUrl(image._id));
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center rounded h-96 w-full" style={{backgroundColor: 'var(--accent-light)'}}>
-                    <p style={{color: 'var(--text-muted)'}}>Loading image...</p>
-                  </div>
+      {error && (
+        <div className="glass-card p-3 mb-4 text-xs font-body text-[#f87171]"
+             style={{ borderColor: 'rgba(248,113,113,0.25)' }}>
+          {error}
+        </div>
+      )}
+
+      {/* Main layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 xl:h-[calc(100vh-210px)] h-auto overflow-hidden">
+        {/* ── Image panel ── */}
+        <div className="xl:col-span-3 glass-panel flex flex-col overflow-hidden xl:h-full xl:min-h-0" style={{ minHeight: '520px' }}>
+          {/* Image header strip */}
+          {image && (
+            <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-body text-white/80">{image.originalName}</p>
+                {image.metadata && (
+                  <p className="text-xs font-body text-white/35">
+                    {image.metadata.width}×{image.metadata.height}px ·{' '}
+                    {(image.metadata.size / 1024).toFixed(0)}KB
+                  </p>
                 )}
               </div>
+              <span className="text-xs font-body text-white/25 font-mono">
+                #{image._id?.slice(-8)}
+              </span>
             </div>
-          </div>
+          )}
 
-          {/* Feedback Panel - Compact sidebar */}
-          <div className="xl:col-span-1">
-            <div className="rounded-lg shadow-accent h-full flex flex-col card-hover" style={{backgroundColor: 'var(--secondary-bg)'}}>
-              {/* Panel Header */}
-              <div className="px-4 py-3 border-b rounded-t-lg" style={{backgroundColor: 'var(--accent-light)', borderColor: 'var(--border-color)'}}>
-                <h3 className="text-sm font-semibold" style={{color: 'var(--text-primary)'}}>
-                  Feedback ({filteredFeedback.length})
-                </h3>
-                <p className="text-xs" style={{color: 'var(--text-muted)'}}>
-                  {roleFilter === 'all' ? 'All Roles' : roleFilter}
+          {/* Image display */}
+          <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
+            {image ? (
+              <img
+                src={imageAPI.getImageFileUrl(image._id)}
+                alt={image.originalName}
+                className="max-w-full max-h-full object-contain rounded-xl"
+                style={{ maxHeight: 'calc(100vh - 320px)' }}
+              />
+            ) : (
+              <p className="text-white/30 font-body text-sm">Loading image…</p>
+            )}
+          </div>
+        </div>
+
+        {/* ── Feedback sidebar ── */}
+        <div className="xl:col-span-1 glass-panel flex flex-col overflow-hidden xl:h-full">
+          {/* Score + summary */}
+          {analysis?.overallAnalysis && (
+            <div className="p-5 border-b border-white/10 flex items-center gap-4">
+              <ScoreRing score={analysis.overallAnalysis.score} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-body text-white/40 uppercase tracking-widest mb-1">Design Score</p>
+                <p className="text-xs font-body text-white/60 line-clamp-3 leading-relaxed">
+                  {analysis.overallAnalysis.summary}
                 </p>
               </div>
-
-              {/* Overall Analysis - Compact */}
-              {analysis?.overallAnalysis && (
-                <div className="px-4 py-3 border-b" style={{borderColor: 'var(--border-color)'}}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium" style={{color: 'var(--text-secondary)'}}>Score</span>
-                    <span className="text-lg font-bold text-accent">
-                      {analysis.overallAnalysis.score}/100
-                    </span>
-                  </div>
-                  <div className="w-full rounded-full h-1.5 mb-2" style={{backgroundColor: 'var(--border-color)'}}>
-                    <div 
-                      className="h-1.5 rounded-full bg-accent" 
-                      style={{ width: `${analysis.overallAnalysis.score}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-xs line-clamp-3" style={{color: 'var(--text-secondary)'}}>
-                    {analysis.overallAnalysis.summary}
-                  </p>
-                </div>
-              )}
-
-              {/* Feedback List - Scrollable */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="p-4 space-y-3">
-                  {filteredFeedback.map((feedbackItem, index) => (
-                    <div
-                      key={feedbackItem._id}
-                      className="border rounded-lg p-3 card-hover transition-all"
-                      style={{backgroundColor: 'var(--accent-light)', borderColor: 'var(--border-color)'}}
-                    >
-                      <div className="flex items-start gap-2">
-                        <div className={`w-5 h-5 rounded-full ${getSeverityColor(feedbackItem.severity)} text-white text-xs flex items-center justify-center font-bold flex-shrink-0`}>
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-medium line-clamp-2" style={{color: 'var(--text-primary)'}}>
-                            {feedbackItem.title}
-                          </h4>
-                          <p className="text-xs mt-1 line-clamp-3" style={{color: 'var(--text-secondary)'}}>
-                            {feedbackItem.description}
-                          </p>
-                          
-                          {/* Compact Metadata */}
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            <span className={`px-1 py-0.5 rounded text-xs font-medium ${
-                              feedbackItem.severity === 'high' ? 'bg-red-100 text-red-700' :
-                              feedbackItem.severity === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-blue-100 text-blue-700'
-                            }`}>
-                              {feedbackItem.severity}
-                            </span>
-                            <span className="text-xs px-1 py-0.5 rounded" style={{color: 'var(--text-muted)', backgroundColor: 'var(--secondary-bg)'}}>
-                              {feedbackItem.category?.replace('_', ' ')}
-                            </span>
-                          </div>
-
-                          {/* Coordinates */}
-                          {feedbackItem.coordinates && (
-                            <div className="text-xs mt-1" style={{color: 'var(--text-muted)'}}>
-                              @({feedbackItem.coordinates.x},{feedbackItem.coordinates.y})
-                            </div>
-                          )}
-
-                          {/* Recommendations - Collapsible */}
-                          {feedbackItem.recommendations && feedbackItem.recommendations.length > 0 && (
-                            <div className="mt-2 p-2 rounded text-xs" style={{backgroundColor: 'var(--secondary-bg)'}}>
-                              <div className="font-medium mb-1 text-accent">Recommendations:</div>
-                              <ul className="list-disc list-inside space-y-1">
-                                {feedbackItem.recommendations.slice(0, 2).map((rec, idx) => (
-                                  <li key={idx} className="line-clamp-2" style={{color: 'var(--text-secondary)'}}>{rec}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {/* Comments Section - Compact */}
-                          <div className="mt-2 border-t pt-2" style={{borderColor: 'var(--border-color)'}}>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs" style={{color: 'var(--text-secondary)'}}>
-                                {comments[feedbackItem._id]?.length || 0} comments
-                              </span>
-                              <button
-                                onClick={() => setSelectedFeedbackForComment(
-                                  selectedFeedbackForComment === feedbackItem._id ? null : feedbackItem._id
-                                )}
-                                className="text-xs hover:opacity-75 transition-opacity text-accent"
-                              >
-                                {selectedFeedbackForComment === feedbackItem._id ? '×' : '+'}
-                              </button>
-                            </div>
-
-                            {/* Existing Comments - Compact */}
-                            {comments[feedbackItem._id] && comments[feedbackItem._id].length > 0 && (
-                              <div className="mt-2 space-y-1 max-h-20 overflow-y-auto">
-                                {comments[feedbackItem._id].slice(0, 3).map((comment, idx) => (
-                                  <div key={idx} className="text-xs p-1.5 rounded" style={{backgroundColor: 'var(--secondary-bg)'}}>
-                                    <div className="font-medium" style={{color: 'var(--text-primary)'}}>{comment.author}</div>
-                                    <p className="line-clamp-2" style={{color: 'var(--text-secondary)'}}>{comment.content}</p>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Add Comment Form - Compact */}
-                            {selectedFeedbackForComment === feedbackItem._id && (
-                              <div className="mt-2">
-                                <textarea
-                                  value={newComment}
-                                  onChange={(e) => setNewComment(e.target.value)}
-                                  placeholder="Add comment..."
-                                  className="w-full text-xs border rounded p-1.5"
-                                  style={{borderColor: 'var(--border-color)', backgroundColor: 'var(--secondary-bg)'}}
-                                  rows="2"
-                                />
-                                <div className="flex justify-end gap-1 mt-1">
-                                  <button
-                                    onClick={() => setSelectedFeedbackForComment(null)}
-                                    className="px-2 py-1 text-xs hover:opacity-75 transition-opacity"
-                                    style={{color: 'var(--text-secondary)'}}
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    onClick={() => addComment(feedbackItem._id)}
-                                    className="px-2 py-1 text-xs text-white rounded hover:opacity-90 transition-opacity"
-                                    style={{backgroundColor: 'var(--accent-bg)'}}
-                                  >
-                                    Post
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {filteredFeedback.length === 0 && (
-                    <div className="text-center py-8">
-                      <p className="text-xs" style={{color: 'var(--text-muted)'}}>No feedback for selected filter</p>
-                      {!image?.analysisStatus && (
-                        <p className="text-xs mt-1" style={{color: 'var(--text-muted)'}}>Click "Analyze" to generate AI feedback</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
+          )}
+
+          {/* Panel header */}
+          <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+            <p className="text-sm font-body text-white/70">
+              Feedback
+              <span className="ml-1.5 text-xs text-white/35">({filteredFeedback.length})</span>
+            </p>
+          </div>
+
+          {/* List */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {filteredFeedback.map((fb, i) => (
+              <FeedbackItem
+                key={fb._id}
+                item={fb}
+                index={i}
+                comments={comments[fb._id]}
+                onAddComment={addComment}
+                selected={selected === fb._id}
+                onSelect={setSelected}
+              />
+            ))}
+
+            {filteredFeedback.length === 0 && (
+              <div className="text-center py-10">
+                <span className="text-white/20 mb-3 block"><Icon d={ICONS.comment} size={28} /></span>
+                <p className="text-xs font-body text-white/35">
+                  {image?.analysisStatus === 'completed'
+                    ? 'No feedback for this filter'
+                    : 'Run AI analysis to generate feedback'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Add Feedback Modal */}
-      {showAddFeedback && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="rounded-lg p-6 w-full max-w-md" style={{backgroundColor: 'var(--secondary-bg)'}}>
-            <h3 className="text-lg font-semibold mb-4" style={{color: 'var(--text-primary)'}}>Add New Feedback</h3>
-            
-            <form onSubmit={(e) => { e.preventDefault(); addUserFeedback(); }}>
-              <div className="space-y-4">
+      {/* ── Add Feedback Modal ── */}
+      {showAdd && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)' }}>
+          <div className="glass-panel-strong w-full max-w-md p-7">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-heading italic text-white text-xl">Add Feedback</h2>
+              <button onClick={() => setShowAdd(false)}
+                      className="text-white/35 hover:text-white transition-colors">
+                <Icon d={ICONS.close} size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-body text-white/45 uppercase tracking-widest block mb-1.5">Title</label>
+                <input value={newFb.title} onChange={e => setNewFb({...newFb, title: e.target.value})}
+                       className="glass-input w-full px-4 py-3 text-sm font-body"
+                       placeholder="e.g. Contrast ratio too low" />
+              </div>
+              <div>
+                <label className="text-xs font-body text-white/45 uppercase tracking-widest block mb-1.5">Description</label>
+                <textarea value={newFb.description} onChange={e => setNewFb({...newFb, description: e.target.value})}
+                          className="glass-input w-full px-4 py-3 text-sm font-body resize-none"
+                          rows={3} placeholder="Describe the issue…" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{color: 'var(--text-secondary)'}}>Title</label>
-                  <input
-                    type="text"
-                    value={newFeedback.title}
-                    onChange={(e) => setNewFeedback({ ...newFeedback, title: e.target.value })}
-                    className="w-full border rounded-lg px-3 py-2"
-                    style={{borderColor: 'var(--border-color)', backgroundColor: 'var(--secondary-bg)'}}
-                    required
-                  />
+                  <label className="text-xs font-body text-white/45 uppercase tracking-widest block mb-1.5">Category</label>
+                  <select value={newFb.category} onChange={e => setNewFb({...newFb, category: e.target.value})}
+                          className="glass-input w-full px-3 py-2.5 text-sm font-body">
+                    <option value="visual_hierarchy">Visual Hierarchy</option>
+                    <option value="accessibility">Accessibility</option>
+                    <option value="content">Content</option>
+                    <option value="ux_patterns">UX Patterns</option>
+                  </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{color: 'var(--text-secondary)'}}>Description</label>
-                  <textarea
-                    value={newFeedback.description}
-                    onChange={(e) => setNewFeedback({ ...newFeedback, description: e.target.value })}
-                    className="w-full border rounded-lg px-3 py-2"
-                    style={{borderColor: 'var(--border-color)', backgroundColor: 'var(--secondary-bg)'}}
-                    rows="3"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1" style={{color: 'var(--text-secondary)'}}>Category</label>
-                    <select
-                      value={newFeedback.category}
-                      onChange={(e) => setNewFeedback({ ...newFeedback, category: e.target.value })}
-                      className="w-full border rounded-lg px-3 py-2"
-                      style={{borderColor: 'var(--border-color)', backgroundColor: 'var(--secondary-bg)'}}
-                    >
-                      <option value="visual_hierarchy">Visual Hierarchy</option>
-                      <option value="accessibility">Accessibility</option>
-                      <option value="content">Content</option>
-                      <option value="ux_patterns">UX Patterns</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1" style={{color: 'var(--text-secondary)'}}>Severity</label>
-                    <select
-                      value={newFeedback.severity}
-                      onChange={(e) => setNewFeedback({ ...newFeedback, severity: e.target.value })}
-                      className="w-full border rounded-lg px-3 py-2"
-                      style={{borderColor: 'var(--border-color)', backgroundColor: 'var(--secondary-bg)'}}
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{color: 'var(--text-secondary)'}}>Coordinates (Optional)</label>
-                  <div className="grid grid-cols-4 gap-2">
-                    <input
-                      type="number"
-                      placeholder="X"
-                      value={newFeedback.coordinates.x}
-                      onChange={(e) => setNewFeedback({ 
-                        ...newFeedback, 
-                        coordinates: { ...newFeedback.coordinates, x: parseInt(e.target.value) || 0 }
-                      })}
-                      className="border rounded px-2 py-1 text-sm"
-                      style={{borderColor: 'var(--border-color)', backgroundColor: 'var(--secondary-bg)'}}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Y"
-                      value={newFeedback.coordinates.y}
-                      onChange={(e) => setNewFeedback({ 
-                        ...newFeedback, 
-                        coordinates: { ...newFeedback.coordinates, y: parseInt(e.target.value) || 0 }
-                      })}
-                      className="border rounded px-2 py-1 text-sm"
-                      style={{borderColor: 'var(--border-color)', backgroundColor: 'var(--secondary-bg)'}}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Width"
-                      value={newFeedback.coordinates.width}
-                      onChange={(e) => setNewFeedback({ 
-                        ...newFeedback, 
-                        coordinates: { ...newFeedback.coordinates, width: parseInt(e.target.value) || 50 }
-                      })}
-                      className="border rounded px-2 py-1 text-sm"
-                      style={{borderColor: 'var(--border-color)', backgroundColor: 'var(--secondary-bg)'}}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Height"
-                      value={newFeedback.coordinates.height}
-                      onChange={(e) => setNewFeedback({ 
-                        ...newFeedback, 
-                        coordinates: { ...newFeedback.coordinates, height: parseInt(e.target.value) || 50 }
-                      })}
-                      className="border rounded px-2 py-1 text-sm"
-                      style={{borderColor: 'var(--border-color)', backgroundColor: 'var(--secondary-bg)'}}
-                    />
-                  </div>
+                  <label className="text-xs font-body text-white/45 uppercase tracking-widest block mb-1.5">Severity</label>
+                  <select value={newFb.severity} onChange={e => setNewFb({...newFb, severity: e.target.value})}
+                          className="glass-input w-full px-3 py-2.5 text-sm font-body">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
                 </div>
               </div>
+            </div>
 
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowAddFeedback(false)}
-                  className="btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                >
-                  Add Feedback
-                </button>
-              </div>
-            </form>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => setShowAdd(false)} className="btn-secondary px-5 py-2.5 text-sm">Cancel</button>
+              <button onClick={addFeedback} disabled={!newFb.title.trim()}
+                      className="btn-primary px-6 py-2.5 text-sm disabled:opacity-40">
+                Add Feedback
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -5,6 +5,14 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        heading: ['Instrument Serif', 'serif'],
+        body: ['Barlow', 'sans-serif'],
+        dirtyline: ['Dirtyline', 'sans-serif'],
+      },
+      borderRadius: {
+        DEFAULT: '9999px',
+      },
       colors: {
         'feedback': {
           'accessibility': '#ef4444',

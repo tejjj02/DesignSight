@@ -1,55 +1,116 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 
-// Import pages (to be created)
-import Dashboard from './pages/Dashboard';
+// Pages
+import Dashboard     from './pages/Dashboard';
 import ProjectDetail from './pages/ProjectDetail';
 import ImageAnalysis from './pages/ImageAnalysis';
 
+// Components
+import HeroSection from './components/HeroSection';
+import VideoBg     from './components/VideoBg';
+
+// ─── Logo mark ────────────────────────────────────────────────────────────────
+function LogoMark() {
+  return (
+    <svg width="36" height="22" viewBox="0 0 44 26" fill="none" aria-hidden>
+      <rect x="0"  y="3" width="14" height="20" rx="3" fill="white" />
+      <rect x="16" y="3" width="12" height="20" rx="3" fill="white" />
+      <rect x="30" y="3" width="14" height="20" rx="3" fill="white" />
+    </svg>
+  );
+}
+
+// ─── Glass App Nav (fixed top bar for inner pages) ────────────────────────────
+function AppNav() {
+  const navigate = useNavigate();
+  return (
+    <nav className="fixed top-5 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap">
+      <div className="liquid-glass flex items-center gap-5 px-4 py-2.5"
+           style={{ borderRadius: '9999px' }}>
+        <Link to="/" className="flex items-center gap-2.5">
+          <LogoMark />
+          <span className="text-sm font-heading font-medium text-white/90 italic tracking-wide">
+            DesignSight
+          </span>
+        </Link>
+
+        <div className="w-px h-4 bg-white/20 mx-1" />
+
+        <div className="flex items-center gap-4">
+          {[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Projects',  href: '/projects'  },
+          ].map(({ label, href }) => (
+            <Link key={label} to={href}
+               className="text-sm font-body font-light text-white/65 hover:text-white transition-colors duration-200">
+              {label}
+            </Link>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3 ml-2">
+          <button
+            onClick={() => navigate('/projects')}
+            className="liquid-glass-strong text-sm font-body font-medium text-white px-4 py-1.5
+                       transition-all duration-200 hover:scale-[1.04]
+                       hover:shadow-[0_0_16px_2px_rgba(255,255,255,0.12)] active:scale-[0.97]"
+            style={{ borderRadius: '9999px' }}>
+            New Project
+          </button>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+// ─── Shared inner-page shell ──────────────────────────────────────────────────
+function AppShell({ children }) {
+  const location = useLocation();
+  return (
+    <div className="min-h-screen bg-black text-white font-body overflow-x-hidden">
+      {/* Persistent video background */}
+      <VideoBg />
+
+      {/* Floating nav */}
+      <AppNav />
+
+      {/* Page content sits on top of video, padded for nav */}
+      <main className="relative z-10 pt-24 pb-12 min-h-screen">
+        <div key={location.pathname} className="animate-fade-in">
+          {children}
+        </div>
+      </main>
+
+      {/* Subtle footer */}
+      <footer className="relative z-10 border-t border-white/10 py-4">
+        <p className="text-center text-xs font-body text-white/30 tracking-widest uppercase">
+          DesignSight — AI-Powered Design Feedback
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
 function App() {
   return (
     <Router>
-      <div className="App min-h-screen" style={{backgroundColor: 'var(--primary-bg)'}}>
-        <header className="shadow-accent border-b" style={{backgroundColor: 'var(--secondary-bg)', borderColor: 'var(--border-color)'}}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
-              <div className="flex items-center">
-                <h1 className="text-2xl font-bold gradient-text">
-                  DesignSight
-                </h1>
-                <span className="ml-2 px-2 py-1 text-xs rounded text-white" style={{backgroundColor: 'var(--accent-bg)'}}>
-                  AI-Powered
-                </span>
-              </div>
-              <nav className="flex space-x-4">
-                <a href="/" className="hover:opacity-75 transition-opacity text-accent">
-                  Dashboard
-                </a>
-                <a href="/projects" className="hover:opacity-75 transition-opacity text-accent">
-                  Projects
-                </a>
-              </nav>
-            </div>
-          </div>
-        </header>
+      <Routes>
+        {/* Landing */}
+        <Route path="/" element={<HeroSection />} />
 
-        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/projects/:id" element={<ProjectDetail />} />
-            <Route path="/images/:imageId/analysis" element={<ImageAnalysis />} />
-          </Routes>
-        </main>
+        {/* Dashboard / Projects list */}
+        <Route path="/dashboard" element={<AppShell><Dashboard /></AppShell>} />
+        <Route path="/projects"  element={<AppShell><Dashboard /></AppShell>} />
 
-        <footer className="border-t mt-12" style={{backgroundColor: 'var(--secondary-bg)', borderColor: 'var(--border-color)'}}>
-          <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-            <p className="text-center" style={{color: 'var(--text-secondary)'}}>
-              DesignSight - AI-Powered Design Feedback Platform
-            </p>
-          </div>
-        </footer>
-      </div>
+        {/* Project detail */}
+        <Route path="/projects/:id" element={<AppShell><ProjectDetail /></AppShell>} />
+
+        {/* Image analysis */}
+        <Route path="/images/:imageId/analysis" element={<AppShell><ImageAnalysis /></AppShell>} />
+      </Routes>
     </Router>
   );
 }

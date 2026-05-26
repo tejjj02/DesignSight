@@ -1,13 +1,39 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* Clear CRA defaults that clash with glass design */
+.App { text-align: left; }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* Custom scrollbar — thin dark */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+/* select option background for glass-input */
+select option { background: #111; color: #fff; }
+
+/* Staggered reveal animation utility */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeSlideUp 0.35s ease both; }
+
+/* Animate-pulse tweak on dark */
+@keyframes pulse {
+  0%, 100% { opacity: 0.12; }
+  50%       { opacity: 0.22; }
+}
+.animate-pulse { animation: pulse 2s ease-in-out infinite; }
+
+/* Indeterminate progress bar for pipeline */
+@keyframes progressIndeterminate {
+  0% { left: -35%; width: 35%; }
+  50% { left: 30%; width: 70%; }
+  100% { left: 100%; width: 0%; }
+}
+.animate-pipeline-load {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #10a37f, #38bdf8);
+  animation: progressIndeterminate 1.6s infinite linear;
 }

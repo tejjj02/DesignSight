@@ -1,28 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap');
+
+@font-face {
+  font-family: 'Dirtyline';
+  src: url('https://fonts.cdnfonts.com/s/15011/Dirtyline36DaysofType.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ChatGPT-inspired Color Variables */
+/* ===========================
+   DESIGN TOKENS
+=========================== */
 :root {
-  --primary-bg: #f7f7f8;
-  --secondary-bg: #ffffff;
-  --accent-bg: #10a37f;
-  --accent-hover: #0d8a6b;
-  --accent-light: #e6f7f3;
-  --text-primary: #2d3748;
-  --text-secondary: #4a5568;
-  --text-muted: #718096;
-  --border-color: #e2e8f0;
+  --primary-bg:    #000;
+  --accent-bg:     #10a37f;
+  --accent-hover:  #12c497;
+  --accent-light:  rgba(16,163,127,0.15);
+  --text-primary:  #fff;
+  --text-secondary:rgba(255,255,255,0.7);
+  --text-muted:    rgba(255,255,255,0.4);
+  --border-color:  rgba(255,255,255,0.13);
   --border-accent: #10a37f;
-  --gradient-start: #667eea;
-  --gradient-end: #764ba2;
+  --gradient-start:#10a37f;
+  --gradient-end:  #0ea5e9;
   --success-color: #10a37f;
   --warning-color: #fbbf24;
-  --error-color: #ef4444;
-  --info-color: #3b82f6;
+  --error-color:   #f87171;
+  --info-color:    #38bdf8;
 }
 
-/* Custom utility classes */
+/* ===========================
+   GLOBAL
+=========================== */
+body {
+  background-color: #000;
+  color: #fff;
+  font-family: 'Barlow', sans-serif;
+}
+
+/* ===========================
+   TAILWIND EXTRAS
+=========================== */
 @layer utilities {
   .line-clamp-2 {
     display: -webkit-box;
@@ -31,7 +53,6 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  
   .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -39,151 +60,292 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-
   .bg-gradient-primary {
     background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
   }
-
-  .bg-accent {
-    background-color: var(--accent-bg);
-  }
-
-  .bg-accent-hover:hover {
-    background-color: var(--accent-hover);
-  }
-
-  .text-accent {
-    color: var(--accent-bg);
-  }
-
-  .border-accent {
-    border-color: var(--border-accent);
-  }
-
-  .shadow-accent {
-    box-shadow: 0 4px 12px rgba(16, 163, 127, 0.15);
-  }
+  .bg-accent       { background-color: var(--accent-bg); }
+  .text-accent     { color: var(--accent-bg); }
+  .border-accent   { border-color: var(--border-accent); }
+  .shadow-accent   { box-shadow: 0 4px 24px rgba(16,163,127,0.25); }
 }
 
-/* Global body styling */
-body {
-  background-color: var(--primary-bg);
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-}
-
-/* Custom styles for DesignSight */
-.feedback-overlay {
-  position: absolute;
-  border: 2px solid;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.feedback-overlay.accessibility {
-  border-color: var(--error-color);
-  background-color: rgba(239, 68, 68, 0.1);
-}
-
-.feedback-overlay.visual_hierarchy {
-  border-color: var(--warning-color);
-  background-color: rgba(251, 191, 36, 0.1);
-}
-
-.feedback-overlay.content {
-  border-color: var(--info-color);
-  background-color: rgba(59, 130, 246, 0.1);
-}
-
-.feedback-overlay.ux_patterns {
-  border-color: var(--success-color);
-  background-color: rgba(16, 163, 127, 0.1);
-}
-
-.feedback-overlay:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-/* Card animations */
-.card-hover {
-  transition: all 0.3s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-/* Button styles */
-.btn-primary {
-  background: linear-gradient(135deg, var(--accent-bg) 0%, var(--accent-hover) 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(16, 163, 127, 0.2);
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 163, 127, 0.3);
-}
-
-.btn-secondary {
-  background-color: var(--secondary-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-  background-color: var(--accent-light);
-  border-color: var(--accent-bg);
-  transform: translateY(-1px);
-}
-
-/* Additional utility styles */
-.stats-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
-
-.stats-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
+/* ===========================
+   GRADIENT TEXT
+=========================== */
 .gradient-text {
-  background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+  background: linear-gradient(135deg, #10a37f 0%, #38bdf8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Role-based filtering styles */
-.role-designer .feedback-overlay:not(.designer-relevant) {
-  opacity: 0.3;
+/* ===========================
+   GLASS SYSTEM
+   KEY RULE: backgrounds are rgba(0,0,0,x) — dark tinted.
+   backdrop-filter only used on panels/modals where content
+   behind is already darkened by the video overlay.
+   Cards use NO backdrop-filter to avoid bleed-through.
+=========================== */
+
+/* Large container panel */
+.glass-panel {
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 20px;
+  position: relative;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 4px 24px rgba(0,0,0,0.55);
 }
 
-.role-developer .feedback-overlay:not(.developer-relevant) {
-  opacity: 0.3;
+/* Modal / overlay panel (backdrop-filter ok here because content below is already dark) */
+.glass-panel-strong {
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 20px;
+  position: relative;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 8px 48px rgba(0,0,0,0.80);
 }
 
-.role-pm .feedback-overlay:not(.pm-relevant) {
-  opacity: 0.3;
+/* Project / image cards — NO backdrop-filter to prevent color bleed */
+.glass-card {
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 4px 16px rgba(0,0,0,0.55);
+}
+.glass-card:hover {
+  background: rgba(18, 18, 18, 0.82);
+  border-color: rgba(255,255,255,0.18);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 12px 32px rgba(0,0,0,0.65);
 }
 
-.role-reviewer .feedback-overlay:not(.reviewer-relevant) {
-  opacity: 0.3;
+/* Text inputs */
+.glass-input {
+  background: rgba(0, 0, 0, 0.60);
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 10px;
+  color: white;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
+.glass-input::placeholder { color: rgba(255,255,255,0.28); }
+.glass-input:focus {
+  outline: none;
+  border-color: rgba(16,163,127,0.55);
+  background: rgba(0, 0, 0, 0.72);
+  box-shadow: 0 0 0 3px rgba(16,163,127,0.15);
+}
+
+/* Ghost pill button */
+.glass-btn {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: white;
+  border-radius: 9999px;
+  transition: all 0.18s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+}
+.glass-btn:hover {
+  background: rgba(40, 40, 40, 0.80);
+  border-color: rgba(255,255,255,0.28);
+  transform: scale(1.03);
+}
+.glass-btn:active { transform: scale(0.97); }
+
+/* Accent gradient pill button */
+.glass-btn-accent {
+  background: linear-gradient(135deg, #10a37f 0%, #0ea5e9 100%);
+  border: none;
+  color: white;
+  border-radius: 9999px;
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 16px rgba(16,163,127,0.32);
+}
+.glass-btn-accent:hover {
+  transform: scale(1.04);
+  box-shadow: 0 6px 24px rgba(16,163,127,0.50);
+}
+.glass-btn-accent:active { transform: scale(0.97); }
+
+/* ===========================
+   LEGACY CLASSES (used by existing JSX)
+=========================== */
+
+/* Stats widget cards — dark solid, no bleed-through */
+.stats-card {
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 4px 16px rgba(0,0,0,0.55);
+  transition: background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.stats-card:hover {
+  background: rgba(20, 20, 20, 0.85);
+  border-color: rgba(255,255,255,0.17);
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.11),
+    0 12px 32px rgba(0,0,0,0.65);
+}
+
+/* Card hover utility */
+.card-hover {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+}
+
+/* Primary button */
+.btn-primary {
+  background: linear-gradient(135deg, #10a37f 0%, #0ea5e9 100%);
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.45rem 1.1rem;
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 4px 16px rgba(16,163,127,0.30);
+}
+.btn-primary:hover {
+  transform: scale(1.04);
+  box-shadow: 0 6px 24px rgba(16,163,127,0.48);
+}
+.btn-primary:active { transform: scale(0.97); }
+
+/* Secondary button */
+.btn-secondary {
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255,255,255,0.80);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 9999px;
+  padding: 0.45rem 1.1rem;
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: all 0.18s ease;
+}
+.btn-secondary:hover {
+  background: rgba(30, 30, 30, 0.80);
+  color: white;
+  border-color: rgba(255,255,255,0.28);
+  transform: scale(1.03);
+}
+
+/* ===========================
+   LIQUID GLASS (hero nav pill)
+=========================== */
+.liquid-glass {
+  background: rgba(255,255,255,0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.10);
+  position: relative;
+  overflow: hidden;
+}
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.45) 0%,
+    rgba(255,255,255,0.15) 20%,
+    rgba(255,255,255,0)    40%,
+    rgba(255,255,255,0)    60%,
+    rgba(255,255,255,0.15) 80%,
+    rgba(255,255,255,0.45) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.liquid-glass-strong {
+  background: rgba(255,255,255,0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+  border: none;
+  box-shadow: 4px 4px 4px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.15);
+  position: relative;
+  overflow: hidden;
+}
+.liquid-glass-strong::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.50) 0%,
+    rgba(255,255,255,0.20) 20%,
+    rgba(255,255,255,0)    40%,
+    rgba(255,255,255,0)    60%,
+    rgba(255,255,255,0.20) 80%,
+    rgba(255,255,255,0.50) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ===========================
+   HERO TITLE
+=========================== */
+.hero-title {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: clamp(72px, 14vw, 220px);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  color: white;
+  text-align: center;
+}
+
+/* ===========================
+   FEEDBACK OVERLAYS (ImageAnalysis)
+=========================== */
+.feedback-overlay {
+  position: absolute;
+  border: 2px solid;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.feedback-overlay.accessibility   { border-color: var(--error-color);   background-color: rgba(248,113,113,0.12); }
+.feedback-overlay.visual_hierarchy{ border-color: var(--warning-color); background-color: rgba(251,191,36,0.12); }
+.feedback-overlay.content         { border-color: var(--info-color);    background-color: rgba(56,189,248,0.12); }
+.feedback-overlay.ux_patterns     { border-color: var(--success-color); background-color: rgba(16,163,127,0.12); }
+.feedback-overlay:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+
+/* Role visibility */
+.role-designer  .feedback-overlay:not(.designer-relevant)  { opacity: 0.25; }
+.role-developer .feedback-overlay:not(.developer-relevant) { opacity: 0.25; }
+.role-pm        .feedback-overlay:not(.pm-relevant)        { opacity: 0.25; }
+.role-reviewer  .feedback-overlay:not(.reviewer-relevant)  { opacity: 0.25; }
