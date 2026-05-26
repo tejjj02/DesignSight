@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { projectAPI } from '../utils/api';
+import { useProjects } from '../hooks/useProjects';
 
 // ── Tiny icons (inline SVG to avoid deps) ─────────────────────────────────────
 function Icon({ d, size = 16 }) {
@@ -195,52 +195,24 @@ function DeleteConfirmationModal({ projectName, onClose, onConfirm }) {
   );
 }
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState(null);
-  const [showCreate, setShowCreate] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-
-  useEffect(() => { fetchProjects(); }, []);
-
-  const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      const response = await projectAPI.getAllProjects();
-      setProjects(response.data || []);
-      setError(null);
-    } catch (err) {
-      setError('Could not load projects. Is the backend running?');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreate = async (data) => {
-    await projectAPI.createProject(data);
-    setShowCreate(false);
-    fetchProjects();
-  };
-
-  const handleDelete = (id, name) => {
-    setDeleteTarget({ id, name });
-  };
-
-  const executeDelete = async () => {
-    if (!deleteTarget) return;
-    try {
-      await projectAPI.deleteProject(deleteTarget.id);
-      setDeleteTarget(null);
-      fetchProjects();
-    } catch (err) {
-      setError('Failed to delete project. Please try again.');
-    }
-  };
+  const {
+    projects,
+    loading,
+    error,
+    showCreate,
+    setShowCreate,
+    deleteTarget,
+    setDeleteTarget,
+    fetchProjects,
+    handleCreate,
+    handleDelete,
+    executeDelete
+  } = useProjects();
 
   const totalImages = projects.reduce((n, p) => n + (p.images?.length || 0), 0);
+  const totalAnalyses = projects.reduce((n, p) => n + (p.images?.filter(i => i.analysisStatus === 'completed').length || 0), 0);
 
   return (
     <div className="max-w-6xl mx-auto px-6">
@@ -268,7 +240,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-3 gap-4 mb-8">
         <StatBadge label="Total Projects"  value={loading ? '…' : projects.length} accent />
         <StatBadge label="Images Uploaded" value={loading ? '…' : totalImages} />
-        <StatBadge label="AI Analyses"     value={loading ? '…' : '—'} />
+        <StatBadge label="AI Analyses"     value={loading ? '…' : totalAnalyses} />
       </div>
 
       {/* Error */}

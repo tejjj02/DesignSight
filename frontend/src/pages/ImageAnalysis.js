@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { imageAPI } from '../utils/api';
+import { useImageAnalysis } from '../hooks/useImageAnalysis';
 
 function Icon({ d, size = 16 }) {
   return (
@@ -164,94 +165,32 @@ function FeedbackItem({ item, index, comments, onAddComment, selected, onSelect 
 // ── ImageAnalysis page ─────────────────────────────────────────────────────────
 const ImageAnalysis = () => {
   const { imageId } = useParams();
-  const navigate    = useNavigate();
+  const navigate = useNavigate();
 
-  const [image,      setImage]      = useState(null);
-  const [analysis,   setAnalysis]   = useState(null);
-  const [feedback,   setFeedback]   = useState([]);
-  const [comments,   setComments]   = useState({});
-  const [loading,    setLoading]    = useState(true);
-  const [analyzing,  setAnalyzing]  = useState(false);
-  const [error,      setError]      = useState(null);
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [userRole,   setUserRole]   = useState('designer');
-  const [selected,   setSelected]   = useState(null);
-  const [showAdd,    setShowAdd]    = useState(false);
-  const [newFb,      setNewFb]      = useState({
-    title: '', description: '', category: 'visual_hierarchy', severity: 'medium',
-    coordinates: { x: 0, y: 0, width: 50, height: 50 },
-  });
-
-  useEffect(() => { fetchAll(); }, [imageId]); // eslint-disable-line
-
-  const fetchAll = async () => {
-    try {
-      setLoading(true);
-      const data = await imageAPI.getAnalysis(imageId);
-      setImage(data.image);
-      setFeedback(data.feedback || []);
-      if (data.image.analysisData) setAnalysis(data.image.analysisData);
-
-      const cmtMap = {};
-      for (const fb of data.feedback || []) {
-        try {
-          const r = await imageAPI.getFeedbackComments(fb._id);
-          cmtMap[fb._id] = r.comments || [];
-        } catch { cmtMap[fb._id] = []; }
-      }
-      setComments(cmtMap);
-    } catch { setError('Failed to load analysis'); }
-    finally { setLoading(false); }
-  };
-
-  const startAnalysis = async () => {
-    setAnalyzing(true);
-    setError(null);
-    try {
-      const res = await imageAPI.analyzeImage(imageId, {
-        role: userRole, focusAreas: ['layout', 'typography', 'color'], projectType: 'web-design',
-      });
-      if (res.success) await fetchAll();
-      else setError('Analysis failed: ' + res.error);
-    } catch (e) { setError('Failed: ' + e.message); }
-    finally { setAnalyzing(false); }
-  };
-
-  const addFeedback = async () => {
-    const res = await imageAPI.addFeedback({ ...newFb, imageId, targetRoles: [userRole] });
-    if (res.success) {
-      setShowAdd(false);
-      setNewFb({ title: '', description: '', category: 'visual_hierarchy', severity: 'medium',
-        coordinates: { x: 0, y: 0, width: 50, height: 50 } });
-      await fetchAll();
-    }
-  };
-
-  const addComment = async (fbId, content) => {
-    await imageAPI.addComment({ feedbackId: fbId, content, author: userRole });
-    await fetchAll();
-  };
-
-  const downloadJSON = () => {
-    const data = { image, analysis, feedback: filteredFeedback, exportDate: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `feedback-${image?.originalName || 'analysis'}.json`;
-    a.click();
-  };
-
-  const downloadPDF = async () => {
-    const blob = await imageAPI.downloadFeedbackPDF(imageId);
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
-    a.download = `feedback-${image?.originalName || 'analysis'}.pdf`;
-    a.click();
-  };
-
-  const filteredFeedback = feedback.filter(fb =>
-    roleFilter === 'all' || (fb.targetRoles && fb.targetRoles.includes(roleFilter))
-  );
+  const {
+    image,
+    analysis,
+    loading,
+    analyzing,
+    error,
+    roleFilter,
+    setRoleFilter,
+    userRole,
+    setUserRole,
+    selected,
+    setSelected,
+    showAdd,
+    setShowAdd,
+    newFb,
+    setNewFb,
+    filteredFeedback,
+    comments,
+    startAnalysis,
+    addFeedback,
+    addComment,
+    downloadJSON,
+    downloadPDF
+  } = useImageAnalysis(imageId);
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
@@ -387,14 +326,54 @@ const ImageAnalysis = () => {
           )}
 
           {/* Image display */}
-          <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
+          <div className="flex-1 flex items-center justify-center p-6 overflow-hidden relative">
             {image ? (
-              <img
-                src={imageAPI.getImageFileUrl(image._id)}
-                alt={image.originalName}
-                className="max-w-full max-h-full object-contain rounded-xl"
-                style={{ maxHeight: 'calc(100vh - 320px)' }}
-              />
+              <div className="relative inline-block max-w-full max-h-full h-full flex items-center justify-center">
+                <div className="relative">
+                  <img
+                    src={imageAPI.getImageFileUrl(image._id)}
+                    alt={image.originalName}
+                    className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+                    style={{ maxHeight: 'calc(100vh - 320px)' }}
+                  />
+                  {/* Feedback Overlays */}
+                  {filteredFeedback.map((fb, i) => {
+                    const widthPct = (fb.coordinates.width / (image.metadata?.width || 100)) * 100;
+                    const heightPct = (fb.coordinates.height / (image.metadata?.height || 100)) * 100;
+                    const leftPct = (fb.coordinates.x / (image.metadata?.width || 100)) * 100;
+                    const topPct = (fb.coordinates.y / (image.metadata?.height || 100)) * 100;
+
+                    const isSelected = selected === fb._id;
+
+                    return (
+                      <div
+                        key={fb._id}
+                        className={`absolute feedback-overlay border-2 cursor-pointer transition-all duration-300 ${isSelected ? 'shadow-[0_0_0_4px_rgba(16,163,127,0.3)] z-10' : 'opacity-60 hover:opacity-100 z-0'}`}
+                        style={{
+                          left: `${leftPct}%`,
+                          top: `${topPct}%`,
+                          width: `${widthPct}%`,
+                          height: `${heightPct}%`,
+                          borderColor: fb.severity === 'high' ? '#f87171' : fb.severity === 'medium' ? '#fbbf24' : '#38bdf8',
+                          background: isSelected ? 'rgba(16,163,127,0.1)' : 'transparent',
+                          borderRadius: '8px'
+                        }}
+                        onClick={() => setSelected(isSelected ? null : fb._id)}
+                      >
+                        <div
+                          className="absolute -top-3 -left-3 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-black"
+                          style={{
+                            background: fb.severity === 'high' ? '#f87171' : fb.severity === 'medium' ? '#fbbf24' : '#38bdf8',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                          }}
+                        >
+                          {i + 1}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             ) : (
               <p className="text-white/30 font-body text-sm">Loading image…</p>
             )}

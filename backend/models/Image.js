@@ -55,6 +55,18 @@ const imageSchema = new mongoose.Schema({
       default: null
     }
   },
+  analysisData: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
+  analysisTimestamp: {
+    type: Date,
+    default: null
+  },
+  analysisError: {
+    type: String,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now

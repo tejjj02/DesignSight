@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { projectAPI, imageAPI } from '../utils/api';
+import { imageAPI } from '../utils/api';
+import { useProjectDetail } from '../hooks/useProjectDetail';
 
 function Icon({ d, size = 16 }) {
   return (
@@ -208,64 +209,17 @@ function UploadModal({ projectId, onClose, onUploaded }) {
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [project,  setProject]  = useState(null);
-  const [images,   setImages]   = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState(null);
-  const [showUpload, setShowUpload] = useState(false);
-  const [analyzingIds, setAnalyzingIds] = useState({});
-
-  useEffect(() => {
-    fetchProject();
-    fetchImages();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  const fetchProject = async () => {
-    try {
-      setLoading(true);
-      const res = await projectAPI.getProject(id);
-      setProject(res.data);
-    } catch {
-      setError('Failed to load project');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchImages = async () => {
-    try {
-      const data = await imageAPI.getAllImages({ projectId: id });
-      setImages(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error fetching images:', err);
-    }
-  };
-
-  const handleAnalyze = async (imageId) => {
-    try {
-      setAnalyzingIds(prev => ({ ...prev, [imageId]: true }));
-      // Optimistically update status to show running pipeline immediately
-      setImages(prev => prev.map(img => img._id === imageId ? { ...img, analysisStatus: 'processing' } : img));
-      
-      await imageAPI.analyzeImage(imageId, {
-        role: 'designer',
-        focusAreas: ['layout', 'typography', 'color'],
-        projectType: 'web-design',
-      });
-      await fetchImages();
-    } catch (err) {
-      console.error('Analysis failed:', err);
-      // Revert status to failed
-      setImages(prev => prev.map(img => img._id === imageId ? { ...img, analysisStatus: 'failed' } : img));
-    } finally {
-      setAnalyzingIds(prev => {
-        const next = { ...prev };
-        delete next[imageId];
-        return next;
-      });
-    }
-  };
+  const {
+    project,
+    images,
+    loading,
+    error,
+    showUpload,
+    setShowUpload,
+    analyzingIds,
+    fetchImages,
+    handleAnalyze
+  } = useProjectDetail(id);
 
   if (loading) {
     return (
