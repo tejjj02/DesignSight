@@ -91,6 +91,7 @@ app.use('/api/projects', require('./routes/projects'));
 app.use('/api/images', require('./routes/images'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/comments', require('./routes/comments'));
+app.use('/api/guidelines', require('./routes/guidelines'));
 
 // Global error handler
 app.use((err, req, res, next) => {

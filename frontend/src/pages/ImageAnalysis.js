@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { imageAPI } from '../utils/api';
+import { imageAPI, guidelineAPI } from '../utils/api';
 import { useImageAnalysis } from '../hooks/useImageAnalysis';
+import TechStackModal from '../components/TechStackModal';
+import GuidelineViewer from '../components/GuidelineViewer';
 
 function Icon({ d, size = 16 }) {
   return (
@@ -167,6 +169,33 @@ const ImageAnalysis = () => {
   const { imageId } = useParams();
   const navigate = useNavigate();
 
+  // Guideline state
+  const [showTechModal,    setShowTechModal]    = useState(false);
+  const [guidelineData,    setGuidelineData]    = useState(null);
+  const [guidelineId,      setGuidelineId]      = useState(null);
+  const [guidelineLoading, setGuidelineLoading] = useState(false);
+  const [guidelineError,   setGuidelineError]   = useState(null);
+
+  const handleGenerateGuideline = async (payload) => {
+    setGuidelineLoading(true);
+    setGuidelineError(null);
+    try {
+      const result = await guidelineAPI.generateGuideline(payload);
+      if (result.success) {
+        setGuidelineData(result.guidelines);
+        setGuidelineId(result.guidelineId);
+      } else {
+        throw new Error(result.error || 'Generation failed');
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.error || err.message || 'Failed to generate guideline';
+      setGuidelineError(msg);
+      throw err;
+    } finally {
+      setGuidelineLoading(false);
+    }
+  };
+
   const {
     image,
     analysis,
@@ -278,6 +307,19 @@ const ImageAnalysis = () => {
                     className="btn-primary px-4 py-2 text-xs flex items-center gap-1.5 disabled:opacity-40">
               <Icon d={ICONS.spark} size={12} />
               {analyzing ? 'Analyzing…' : 'Analyze with AI'}
+            </button>
+          )}
+
+          {image?.analysisStatus === 'completed' && (
+            <button
+              id="generate-guideline-btn"
+              onClick={() => setShowTechModal(true)}
+              disabled={guidelineLoading}
+              className="btn-primary px-4 py-2 text-xs flex items-center gap-1.5 disabled:opacity-40"
+              style={{ background: guidelineLoading ? 'rgba(16,163,127,0.4)' : 'rgba(16,163,127,0.85)' }}
+            >
+              <Icon d={ICONS.spark} size={12} />
+              {guidelineLoading ? 'Generating…' : 'Generate Guideline'}
             </button>
           )}
 
@@ -430,6 +472,38 @@ const ImageAnalysis = () => {
           </div>
         </div>
       </div>
+
+      {/* ── Guideline Error ── */}
+      {guidelineError && (
+        <div className="glass-card p-3 mt-4 text-xs font-body text-[#f87171]"
+             style={{ borderColor: 'rgba(248,113,113,0.25)' }}>
+          Guideline error: {guidelineError}
+        </div>
+      )}
+
+      {/* ── Guideline Viewer ── */}
+      {guidelineData && (
+        <GuidelineViewer
+          guidelineId={guidelineId}
+          guidelines={guidelineData}
+          frontendStack={guidelineData?.frontendStack}
+          onRetry={() => setShowTechModal(true)}
+        />
+      )}
+
+      {/* ── TechStack Modal ── */}
+      {showTechModal && (
+        <TechStackModal
+          imageId={imageId}
+          projectId={
+            image?.projectId?._id
+              ? image.projectId._id.toString()
+              : image?.projectId?.toString?.() ?? image?.projectId
+          }
+          onClose={() => setShowTechModal(false)}
+          onGenerate={handleGenerateGuideline}
+        />
+      )}
 
       {/* ── Add Feedback Modal ── */}
       {showAdd && (

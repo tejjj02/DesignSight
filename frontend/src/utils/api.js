@@ -184,6 +184,55 @@ export const imageAPI = {
   }
 };
 
+// Guideline API calls
+export const guidelineAPI = {
+  // Generate a fixing guideline from stored feedback
+  generateGuideline: async (payload) => {
+    try {
+      const response = await api.post('/guidelines/generate', payload);
+      return response.data;
+    } catch (error) {
+      console.error('Error generating guideline:', error);
+      throw error;
+    }
+  },
+
+  // Get a specific guideline by ID
+  getGuideline: async (guidelineId) => {
+    try {
+      const response = await api.get(`/guidelines/${guidelineId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching guideline:', error);
+      throw error;
+    }
+  },
+
+  // Get all guidelines for an image
+  getGuidelinesByImage: async (imageId) => {
+    try {
+      const response = await api.get(`/guidelines/image/${imageId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching guidelines by image:', error);
+      throw error;
+    }
+  },
+
+  // Download guideline PDF as blob
+  downloadGuidelinePdf: async (guidelineId) => {
+    try {
+      const response = await api.get(`/guidelines/${guidelineId}/pdf`, {
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error downloading guideline PDF:', error);
+      throw error;
+    }
+  },
+};
+
 // Health check
 export const healthCheck = async () => {
   try {

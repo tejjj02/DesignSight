@@ -418,7 +418,10 @@ exports.getAnalysis = async (req, res) => {
       success: true,
       image: {
         _id: image._id,
+        projectId: image.projectId,
         originalName: image.originalName,
+        filename: image.filename,
+        metadata: image.metadata,
         analysisStatus: image.analysisStatus,
         analysisData: image.analysisData,
         analysisTimestamp: image.analysisTimestamp,
