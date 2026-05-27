@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { imageAPI } from '../utils/api';
+import { imageAPI, guidelineAPI } from '../utils/api';
 
 export function useImageAnalysis(imageId) {
   const [image, setImage] = useState(null);
@@ -17,6 +17,14 @@ export function useImageAnalysis(imageId) {
     title: '', description: '', category: 'visual_hierarchy', severity: 'medium',
     coordinates: { x: 0, y: 0, width: 50, height: 50 },
   });
+
+  // ── Guideline state ──────────────────────────────────────────────────────────
+  const [showGuidelineModal, setShowGuidelineModal] = useState(false);
+  const [generatingGuideline, setGeneratingGuideline] = useState(false);
+  const [guidelineResult, setGuidelineResult] = useState(null);  // { guidelineId, guideline }
+  const [guidelineError, setGuidelineError] = useState(null);
+  const [showGuidelineViewer, setShowGuidelineViewer] = useState(false);
+  const [guidelineStack, setGuidelineStack] = useState({ frontendStack: 'react', stylingLibrary: 'tailwind' });
 
   useEffect(() => {
     if (imageId) {
@@ -37,14 +45,14 @@ export function useImageAnalysis(imageId) {
       for (const fb of data.feedback || []) {
         try {
           const r = await imageAPI.getFeedbackComments(fb._id);
-          cmtMap[fb._id] = r.data || []; // Note: Ensure it reads data field if updated backend format
+          cmtMap[fb._id] = r.data || [];
         } catch { cmtMap[fb._id] = []; }
       }
       setComments(cmtMap);
-    } catch { 
-      setError('Failed to load analysis'); 
-    } finally { 
-      setLoading(false); 
+    } catch {
+      setError('Failed to load analysis');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,6 +105,37 @@ export function useImageAnalysis(imageId) {
     }
   };
 
+  // ── Guideline actions ────────────────────────────────────────────────────────
+  const generateGuideline = async ({ imageId: imgId, projectId, frontendStack, stylingLibrary, componentLibrary }) => {
+    setGeneratingGuideline(true);
+    setGuidelineError(null);
+    try {
+      const res = await guidelineAPI.generateGuideline({
+        imageId: imgId || imageId,
+        projectId: projectId || image?.projectId,
+        frontendStack,
+        stylingLibrary,
+        componentLibrary
+      });
+      if (res.success) {
+        setGuidelineResult({ guidelineId: res.guidelineId, guideline: res.guideline });
+        setGuidelineStack({ frontendStack, stylingLibrary });
+        setShowGuidelineModal(false);
+        setShowGuidelineViewer(true);
+        return res;
+      } else {
+        setGuidelineError('Guideline generation failed');
+        return null;
+      }
+    } catch (err) {
+      const msg = err.response?.data?.error || err.message || 'Generation failed';
+      setGuidelineError(msg);
+      return null;
+    } finally {
+      setGeneratingGuideline(false);
+    }
+  };
+
   const filteredFeedback = feedback.filter(fb =>
     roleFilter === 'all' || (fb.targetRoles && fb.targetRoles.includes(roleFilter))
   );
@@ -125,6 +164,16 @@ export function useImageAnalysis(imageId) {
     addFeedback,
     addComment,
     downloadJSON,
-    downloadPDF
+    downloadPDF,
+    // Guideline state
+    showGuidelineModal,
+    setShowGuidelineModal,
+    generatingGuideline,
+    guidelineResult,
+    guidelineError,
+    showGuidelineViewer,
+    setShowGuidelineViewer,
+    guidelineStack,
+    generateGuideline,
   };
 }

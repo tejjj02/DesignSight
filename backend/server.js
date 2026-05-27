@@ -91,6 +91,7 @@ app.use('/api/projects', require('./routes/projects'));
 app.use('/api/images', require('./routes/images'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/comments', require('./routes/comments'));
+app.use('/api/guidelines', require('./routes/guidelines'));
 
 // Global error handler
 app.use((err, req, res, next) => {
@@ -106,9 +107,11 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 DesignSight Backend running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 DesignSight Backend running on port ${PORT}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
 
 module.exports = app;

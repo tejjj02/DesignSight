@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { imageAPI } from '../utils/api';
 import { useImageAnalysis } from '../hooks/useImageAnalysis';
+import TechStackModal from '../components/TechStackModal';
+import GuidelineViewer from '../components/GuidelineViewer';
 
 function Icon({ d, size = 16 }) {
   return (
@@ -189,7 +191,17 @@ const ImageAnalysis = () => {
     addFeedback,
     addComment,
     downloadJSON,
-    downloadPDF
+    downloadPDF,
+    // Guideline
+    showGuidelineModal,
+    setShowGuidelineModal,
+    generatingGuideline,
+    guidelineResult,
+    guidelineError,
+    showGuidelineViewer,
+    setShowGuidelineViewer,
+    guidelineStack,
+    generateGuideline,
   } = useImageAnalysis(imageId);
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
@@ -278,6 +290,20 @@ const ImageAnalysis = () => {
                     className="btn-primary px-4 py-2 text-xs flex items-center gap-1.5 disabled:opacity-40">
               <Icon d={ICONS.spark} size={12} />
               {analyzing ? 'Analyzing…' : 'Analyze with AI'}
+            </button>
+          )}
+
+          {/* Generate Fixing Guidelines button – only after analysis is complete */}
+          {image?.analysisStatus === 'completed' && (
+            <button
+              id="generate-guideline-btn"
+              onClick={() => setShowGuidelineModal(true)}
+              disabled={generatingGuideline}
+              className="glass-btn-accent px-4 py-2 text-xs flex items-center gap-1.5 disabled:opacity-40"
+              style={{ borderRadius: '9999px' }}
+            >
+              <Icon d={ICONS.spark} size={12} />
+              {generatingGuideline ? 'Generating…' : 'Fix Guidelines'}
             </button>
           )}
 
@@ -489,6 +515,37 @@ const ImageAnalysis = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Guideline Error ── */}
+      {guidelineError && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 glass-card px-5 py-3"
+             style={{ borderColor: 'rgba(248,113,113,0.3)', maxWidth: '360px' }}>
+          <p className="text-xs font-body text-[#f87171]">{guidelineError}</p>
+        </div>
+      )}
+
+      {/* ── Tech Stack Modal ── */}
+      {showGuidelineModal && (
+        <TechStackModal
+          imageId={imageId}
+          projectId={image?.projectId}
+          onClose={() => setShowGuidelineModal(false)}
+          onGenerated={() => {}}
+          generateGuideline={generateGuideline}
+          generating={generatingGuideline}
+        />
+      )}
+
+      {/* ── Guideline Viewer ── */}
+      {showGuidelineViewer && guidelineResult && (
+        <GuidelineViewer
+          guideline={guidelineResult.guideline}
+          guidelineId={guidelineResult.guidelineId}
+          frontendStack={guidelineStack.frontendStack}
+          stylingLibrary={guidelineStack.stylingLibrary}
+          onClose={() => setShowGuidelineViewer(false)}
+        />
       )}
     </div>
   );
